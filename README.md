@@ -127,8 +127,11 @@ Les tests de performance ont été réalisés pour comparer la vitesse de notre 
 Les tests ont mesuré le nombre d'allocations et de désallocations effectuées par seconde pour différentes tailles de blocs.
 
 #### Graphique des résultats :
+- Compilation sans optimisation system
 ![Benchmark compilation sans optimisation system](compile_sans_opti.png)
+- Compilation avec O2
 ![Benchmark compilation avec O2](compile_with_O2.png)
+- Compilation avec O3
 ![Benchmark compilation avec O3](compile_with_O3.png)
 
 Ces résultats montrent une amélioration significative de la vitesse d'allocation lorsque des optimisations sont appliquées, notamment la fusion des blocs libres et la réutilisation des blocs mémoire. Et on voit bien, plus la taille  des blocs augmente, plus on se rapproche des performances de malloc/free du system.
