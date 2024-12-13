@@ -1,0 +1,188 @@
+<h1 id="allocator">Allocator</h1>
+<h1
+id="implémentation-dun-allocateur-mémoire-personnalisé">Implémentation
+d’un Allocateur Mémoire Personnalisé</h1>
+<p>Ce projet consiste à implémenter un allocateur mémoire personnalisé
+en utilisant des mécanismes bas-niveau en C. L’objectif est de créer une
+version optimisée d’un allocateur mémoire, avec une gestion fine de la
+mémoire via <code>mmap</code> et <code>munmap</code>. Le projet est basé
+sur l’utilisation de <code>mmap</code> pour l’allocation mémoire et des
+optimisations pour améliorer les performances par rapport à l’allocateur
+système classique malloc/free.</p>
+<h2 id="instructions-de-compilation-et-dexécution">Instructions de
+Compilation et d’Exécution</h2>
+<h3 id="compilation">Compilation</h3>
+<p>Le projet utilise un fichier <code>Makefile</code> pour faciliter la
+compilation et l’exécution. Il permet de spécifier différents niveaux
+d’optimisation pour la compilation avec les options <code>-O2</code> et
+<code>-O3</code>. Vous pouvez choisir l’option de compilation avec la
+variable <code>O</code> :</p>
+<ul>
+<li><p><strong>Compilation par défaut (avec debug)</strong> :
+<code>bash     make all</code></p></li>
+<li><p><strong>Compilation avec optimisation <code>-O2</code></strong> :
+<code>bash     make all O=O2</code></p></li>
+<li><p><strong>Compilation avec optimisation <code>-O3</code></strong> :
+<code>bash     make all O=O3</code></p></li>
+<li><p><strong>Nettoyage des fichiers générés</strong> :
+<code>bash     make clean</code></p></li>
+</ul>
+<h3 id="exécution">Exécution</h3>
+<ul>
+<li><p><strong>Tests unitaires</strong> : Après compilation, vous pouvez
+exécuter les tests unitaires pour vérifier le bon fonctionnement de
+l’allocateur. <code>bash     ./build/my_allocator_tests</code></p></li>
+<li><p><strong>Tests de performance</strong> : Pour exécuter les tests
+de performance et mesurer l’efficacité de l’allocateur comparé à
+l’allocateur système :
+<code>bash     ./build/performance_test</code></p></li>
+<li><p><strong>Afficher les performances avec
+<code>matplotlib</code></strong></p>
+<p>Pour visualiser les performances des tests effectués, nous avons
+utilisé la bibliothèque Python <code>matplotlib</code> pour générer des
+graphiques comparant les performances des différents allocateurs
+mémoire.</p>
+<ul>
+<li><strong><em>Prérequis</em></strong></li>
+</ul>
+<ol type="1">
+<li><strong>Activer l’environnement virtuel Python</strong> :
+L’environnement virtuel Python est déjà présent dans le projet. Pour
+l’activer, utilise la commande suivante :
+<ul>
+<li>Sur Linux/macOS : <code>bash     source env/bin/activate</code></li>
+<li>Sur Windows : <code>bash     .\env\Scripts\activate</code></li>
+</ul></li>
+<li><strong>Installer les dépendances Python</strong> : Une fois
+l’environnement activé, installe les bibliothèques nécessaires
+(<code>matplotlib</code> et <code>numpy</code>) en exécutant :
+<code>bash       pip install -r requirements.txt</code></li>
+<li><strong>Exécuter le script Python :</strong> Une fois les
+dépendances installées et l’environnement activé, exécute le script pour
+afficher les graphiques :
+<code>bash       python ./benchmarks/plot_performance.py</code> ##
+Explication des Choix d’Implémentation</li>
+</ol></li>
+</ul>
+<h3 id="structure-des-blocs">Structure des Blocs</h3>
+<p>Chaque bloc alloué ou libre est représenté par une structure
+<code>Block</code>. Elle contient les informations suivantes : -
+<code>size</code> : taille du bloc alloué. - <code>next</code> :
+pointeur vers le bloc suivant. - <code>free</code> : statut de
+l’allocation (1 pour libre, 0 pour alloué). - <code>ptr</code> :
+pointeur vers l’espace mémoire alloué.</p>
+<p>Cette structure permet de gérer efficacement l’allocation et la
+libération de mémoire. Lorsqu’un bloc est libéré, il est ajouté à une
+liste chaînée de blocs libres.</p>
+<h3 id="fonctionnement-de-my_malloc">Fonctionnement de
+<code>my_malloc</code></h3>
+<ol type="1">
+<li>La fonction <code>my_malloc</code> cherche un bloc libre qui peut
+contenir la taille demandée.</li>
+<li>Si un bloc libre est trouvé, il est marqué comme occupé et retourné
+à l’utilisateur.</li>
+<li>Si aucun bloc libre n’est disponible, un nouveau bloc est alloué à
+l’aide de <code>mmap</code> et ajouté à la liste des blocs.</li>
+</ol>
+<h3 id="fonctionnement-de-my_free">Fonctionnement de
+<code>my_free</code></h3>
+<ol type="1">
+<li>La fonction <code>my_free</code> cherche le bloc correspondant à
+l’adresse passée en argument.</li>
+<li>Si le bloc est trouvé, il est marqué comme libre et la fonction
+<code>coalesce_free_blocks</code> est appelée pour fusionner les blocs
+libres adjacents.</li>
+<li>Si l’adresse passée en argument n’est pas valide, un message
+d’erreur est affiché.</li>
+</ol>
+<h3 id="optimisations-appliquées">Optimisations Appliquées</h3>
+<h3 id="optimisations-appliquées-1">Optimisations Appliquées</h3>
+<ol type="1">
+<li><strong>Liste chaînée pour les blocs libres</strong> :
+<ul>
+<li>La gestion des blocs libres se fait via une liste chaînée,
+permettant de réutiliser les blocs libérés sans avoir à appeler
+systématiquement <code>mmap</code>. Cela améliore l’efficacité de
+l’allocateur.</li>
+</ul></li>
+<li><strong>Fusion des blocs libres adjacents</strong> :
+<ul>
+<li>La fonction <code>coalesce_free_blocks</code> permet de fusionner
+les blocs libres adjacents pour réduire la fragmentation de la mémoire.
+Cela rend l’allocateur plus efficace dans la gestion de la mémoire.</li>
+</ul></li>
+<li><strong>Réutilisation des blocs mémoires alloués</strong> :
+<ul>
+<li>Lorsqu’un bloc libre est trouvé, il est réutilisé pour l’allocation,
+évitant ainsi des appels répétitifs à <code>mmap</code>.</li>
+</ul></li>
+<li><strong>Suivi de la taille et de l’état des blocs</strong> :
+<ul>
+<li>Chaque bloc contient des informations sur sa taille, son état (libre
+ou occupé) et un pointeur vers la zone mémoire allouée, ce qui permet de
+gérer précisément la mémoire.</li>
+</ul></li>
+<li><strong>Segmentation en classes de tailles d’allocations</strong> :
+<ul>
+<li>Les blocs sont segmentés en différentes classes de tailles afin
+d’éviter des appels trop fréquents à <code>mmap</code>. Cela améliore
+l’efficacité en utilisant des pools de mémoire pour différentes tailles
+d’allocations, ce qui permet d’allouer et de libérer plus rapidement des
+blocs de taille similaire.</li>
+</ul></li>
+<li><strong>Alignement à la puissance de deux</strong> :
+<ul>
+<li>Les tailles d’allocation sont alignées à la puissance de deux la
+plus proche, ce qui permet de garantir un meilleur alignement mémoire,
+réduisant ainsi les coûts d’accès à la mémoire et augmentant les
+performances globales. L’alignement est effectué sur des multiples de 8
+octets.</li>
+</ul></li>
+<li><strong>Multithreading</strong> :
+<ul>
+<li>Pour optimiser l’allocation de mémoire dans des environnements
+multithread, l’allocateur utilise des mécanismes de verrouillage (mutex)
+afin de garantir la sécurité des accès concurrents aux listes libres et
+éviter les conditions de course. Chaque thread peut avoir son propre
+sous-ensemble de classes de blocs pour éviter les conflits. Pour le
+tester vous compiler le fichier ./src/my_allocator_multi_thread.c, c’est
+dans le makefile,parceque les tests ralentissaient ma machine.</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">gcc</span> <span class="at">-o</span> multi_tread_test ./benchmarks/multithread_env_perf_test.c ./src/my_allocator_multi_thread.c <span class="at">-pthread</span></span></code></pre></div></li>
+<li><strong>Perspectives : Optimisation de la recherche de blocs
+libres</strong> :
+<ul>
+<li>Envisager l’utilisation de structures de données plus efficaces pour
+rechercher des blocs libres, comme des arbres ou des tables de hachage,
+pour accélérer l’allocation de mémoire.</li>
+</ul></li>
+</ol>
+<h2 id="résultats-des-benchmarks">Résultats des Benchmarks</h2>
+<p>Les tests de performance ont été réalisés pour comparer la vitesse de
+notre allocateur mémoire personnalisé avec l’allocateur système (libc).
+Voici les résultats obtenus :</p>
+<h3
+id="benchmarks-nombre-dallocationsdésallocations-par-seconde">Benchmarks
+: Nombre d’allocations/désallocations par seconde</h3>
+<p>Les tests ont mesuré le nombre d’allocations et de désallocations
+effectuées par seconde pour différentes tailles de blocs.</p>
+<h4 id="graphique-des-résultats">Graphique des résultats :</h4>
+<p><img src="compile_sans_opti.png"
+alt="Benchmark compilation sans optimisation system" /> <img
+src="compile_with_O2.png" alt="Benchmark compilation avec O2" /> <img
+src="compile_with_O3.png" alt="Benchmark compilation avec O3" /></p>
+<p>Ces résultats montrent une amélioration significative de la vitesse
+d’allocation lorsque des optimisations sont appliquées, notamment la
+fusion des blocs libres et la réutilisation des blocs mémoire. Et on
+voit bien, plus la taille des blocs augmente, plus on se rapproche des
+performances de malloc/free du system.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Ce projet a permis de créer un allocateur mémoire personnalisé avec
+une gestion fine des blocs et des optimisations pour améliorer les
+performances. Les optimisations mises en place ont permis d’améliorer
+les performances d’allocation et de réduction de la fragmentation
+mémoire, tout en maintenant la compatibilité avec les appels standards
+<code>malloc</code> et <code>free</code>.</p>
+<p>Des optimisations futures pourraient inclure des stratégies avancées
+de gestion de mémoire pour des cas d’utilisation spécifiques.</p>

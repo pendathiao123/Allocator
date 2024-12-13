@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
-#include "my_allocator.h"
+#include "../include/my_allocator.h"
 
 void run_tests() {
     printf("Running tests...\n");

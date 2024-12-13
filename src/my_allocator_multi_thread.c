@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <string.h>
+#include <pthread.h>  // Pour le multithreading
 
 // Listes libres pour chaque classe de tailles
 static Block* free_lists[NUM_CLASSES] = {NULL};
@@ -14,6 +15,9 @@ static const size_t max_class_sizes[NUM_CLASSES] = {
 
 // Compteur pour le nombre de pointeurs actifs
 static size_t active_pointers = 0;
+
+// Mutex global pour protéger l'accès aux ressources partagées
+static pthread_mutex_t allocator_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Fonction pour trouver la classe de taille correspondante
 int get_class(size_t size) {
@@ -42,6 +46,9 @@ void* my_malloc(size_t size) {
         return NULL;  // Retourner NULL si la classe est invalide
     }
 
+    // Verrouiller l'accès avant de manipuler les listes libres
+    pthread_mutex_lock(&allocator_mutex);
+
     // Vérifier si un bloc est disponible dans la liste libre
     Block* block = free_lists[class];
     if (block) {
@@ -49,6 +56,7 @@ void* my_malloc(size_t size) {
         block->free = 0;
         active_pointers++; // Incrémenter le compteur
         printf("Allocated block at %p of size %zu\n", block, aligned_size);
+        pthread_mutex_unlock(&allocator_mutex); // Déverrouiller après l'allocation
         return (void*)(block + 1);
     }
 
@@ -56,6 +64,7 @@ void* my_malloc(size_t size) {
     block = mmap(NULL, aligned_size + sizeof(Block), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (block == MAP_FAILED) {
         perror("mmap");
+        pthread_mutex_unlock(&allocator_mutex); // Déverrouiller en cas d'erreur
         return NULL;
     }
     block = (Block*)((char*)block + sizeof(Block));  // Décale le pointeur pour ne pas écraser les métadonnées
@@ -64,6 +73,8 @@ void* my_malloc(size_t size) {
     block->free = 0;
     active_pointers++; // Incrémenter le compteur
     printf("Allocated block at %p of size %zu with mmap\n", block, aligned_size);
+
+    pthread_mutex_unlock(&allocator_mutex); // Déverrouiller après l'allocation
     return (void*)(block + 1);
 }
 
@@ -79,6 +90,9 @@ void my_free(void* ptr) {
         return;
     }
 
+    // Verrouiller l'accès avant de manipuler les listes libres
+    pthread_mutex_lock(&allocator_mutex);
+
     // Marquer comme libre
     block->free = 1;
     block->next = free_lists[get_class(block->size)];
@@ -89,8 +103,9 @@ void my_free(void* ptr) {
 
     active_pointers--; // Décrémenter le compteur des blocs actifs
     printf("Freed block at %p of size %zu\n", block, block->size);
-}
 
+    pthread_mutex_unlock(&allocator_mutex); // Déverrouiller après la libération
+}
 
 // Fusion des blocs libres adjacents dans une classe spécifique
 void coalesce_free_blocks(int class) {

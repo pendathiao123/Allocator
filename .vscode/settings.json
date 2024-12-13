@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "my_allocator.h": "c"
+        "my_allocator.h": "c",
+        "stdlib.h": "c"
     }
 }
