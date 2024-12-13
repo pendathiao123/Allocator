@@ -5,7 +5,7 @@
 
 typedef struct Block {
     size_t size;
-    struct Block* next;
+    struct Block* next; // Pointeur vers le bloc suivant
     int free;
     void* ptr;  // Pointeur vers le bloc mémoire alloué
 } Block;

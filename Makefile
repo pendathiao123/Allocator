@@ -1,7 +1,11 @@
 # Variables
 CC = gcc
-CFLAGS = -Wall -g
-#CFLAGS = -Wall -g -O3 -march=native
+#Compile sans optimisation
+#CFLAGS = -Wall -g 
+#Compile avec O2
+#CFLAGS = -Wall -g -O2 -march=native
+#Vompile with O3
+CFLAGS = -Wall -g -O3 -march=native
 BUILD_DIR = build
 SRC_DIR = src
 INCLUDE_DIR = include

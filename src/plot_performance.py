@@ -42,5 +42,5 @@ fig.tight_layout(rect=[0, 0.03, 1, 0.95])
 
 
 # Sauvegarder et afficher le graphique
-plt.savefig("performance_comparison_multiple_tests.png", dpi=300)
+plt.savefig("compile_with_O3.png", dpi=300)
 plt.show()
