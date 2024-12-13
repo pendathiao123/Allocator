@@ -1,6 +1,7 @@
 # Variables
 CC = gcc
-CFLAGS = -Wall -pthread -g
+CFLAGS = -Wall -g
+#CFLAGS = -Wall -g -O3 -march=native
 BUILD_DIR = build
 SRC_DIR = src
 INCLUDE_DIR = include

@@ -1,57 +1,46 @@
 import matplotlib.pyplot as plt
-import csv
+import pandas as pd
 
-# Initialisation des listes pour les données
-block_sizes = []
-time_my_allocator = []
-time_malloc_free = []
 
-# Lire les données depuis le fichier CSV (supposé généré par le programme C)
-try:
-    with open('performance_data.csv', 'r') as file:
-        reader = csv.reader(file)
-        next(reader)  # Ignorer l'en-tête
-        for row in reader:
-            block_sizes.append(int(row[0]))  # Taille du bloc en bytes
-            time_my_allocator.append(float(row[1]))  # Temps pour my_malloc/my_free
-            time_malloc_free.append(float(row[2]))  # Temps pour malloc/free
-except FileNotFoundError:
-    print("Erreur : Le fichier 'performance_data.csv' n'a pas été trouvé.")
-    exit(1)
-except Exception as e:
-    print(f"Erreur lors de la lecture du fichier CSV : {e}")
-    exit(1)
+def plot_performance(ax, file_name, label):
+   # Charger les résultats depuis le fichier CSV
+   data = pd.read_csv(file_name)
 
-# Nombre d'allocations (constant dans cet exemple)
-num_allocations = 1000000
 
-# Tracer les performances
-plt.figure(figsize=(10, 6))
+   # Extraire les colonnes
+   block_sizes = data["Block Size"]
+   my_alloc_times = data["My Allocator"]
+   sys_alloc_times = data["System Allocator"]
+   # Création du graphique pour le scénario courant
+   ax.plot(block_sizes, my_alloc_times, label="My Allocator", marker="o")
+   ax.plot(block_sizes, sys_alloc_times, label="System Allocator", marker="s")
+   ax.set_title(label)
+   ax.set_xlabel("Block Size (bytes)")
+   ax.set_ylabel("Time (seconds)")
+   ax.legend()
+   ax.grid(True, linestyle="--", alpha=0.7)
 
-# Graphique pour my_malloc/my_free
-plt.plot(block_sizes, time_my_allocator, label='my_malloc/my_free', marker='o', color='blue')
 
-# Graphique pour malloc/free
-plt.plot(block_sizes, time_malloc_free, label='malloc/free', marker='x', color='red')
+# Fichiers de test et labels correspondants
+test_files = ["test_1.csv", "test_2.csv", "test_3.csv"]
+test_labels = ["Max 1024 octets,pas de 8 octets, 100 000 iter",
+              "Max 2048 octets,pas de 16 octets, 50 000 iter",
+              "Max 4096 octets, pas de 32 octets, 20 000 iter"]
 
-# Ajouter des annotations pour chaque point
-for i, size in enumerate(block_sizes):
-    plt.annotate(f'{num_allocations}', 
-                 (block_sizes[i], time_my_allocator[i]), 
-                 textcoords="offset points", xytext=(0,10), ha='center', color='blue', fontsize=8)
-    plt.annotate(f'{num_allocations}', 
-                 (block_sizes[i], time_malloc_free[i]), 
-                 textcoords="offset points", xytext=(0,10), ha='center', color='red', fontsize=8)
 
-# Configuration des axes
-plt.xscale('log')  # Utilisation d'une échelle logarithmique sur l'axe des X
-plt.xlabel('Taille du bloc (bytes)')  # Axe des abscisses (taille du bloc)
-plt.ylabel('Temps écoulé (secondes)')  # Axe des ordonnées (temps écoulé)
-plt.title(f'Comparaison des performances entre my_malloc/my_free et malloc/free \n'
-          f'Nombre d\'allocations: {num_allocations}')  # Titre du graphique
-plt.legend()  # Légende pour distinguer les deux courbes
-plt.grid(True, which="both", ls="--")  # Ajouter une grille pour améliorer la lisibilité
-plt.tight_layout()  # Ajuster automatiquement les marges
+# Création des sous-graphiques
+fig, axes = plt.subplots(nrows=1, ncols=len(test_files), figsize=(15, 5), sharey=True)
 
-# Sauvegarder l'image du graphique dans un fichier PNG
-plt.savefig('perf.png')
+
+for ax, file, label in zip(axes, test_files, test_labels):
+   plot_performance(ax, file, label)
+
+
+# Ajustement des espaces entre les graphiques
+fig.suptitle("Performance Comparison: My Allocator vs System Allocator")
+fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+
+# Sauvegarder et afficher le graphique
+plt.savefig("performance_comparison_multiple_tests.png", dpi=300)
+plt.show()
